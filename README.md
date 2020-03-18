@@ -3,3 +3,6 @@ A compact and handy data repository written in PHP to enable easy file sending a
 
 ## Setup
 Simply drag the files into a directory served by apache (PHP must be installed and active) and modify the SQL Settings in config.php
+
+## Demo
+A live demo of ODR is accessible at [https://setstorm.com/ODRDemo](https://setstorm.com/ODRDemo)
