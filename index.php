@@ -35,7 +35,7 @@ if(isset($_GET["permerror"])){
 
 if(isset($_POST["name"])){
 			$base64 = "";
-			if(is_uploaded_file($_FILES["docfile"]["name"])){
+			if(is_uploaded_file($_FILES["docfile"]["tmp_name"])){
 				$path = $_FILES['docfile']['name'];
 				$ext = pathinfo($path, PATHINFO_EXTENSION);
 				if($ext != "pdf"){
