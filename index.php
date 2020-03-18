@@ -71,7 +71,7 @@ if(isset($_POST["name"])){
 		  <div class="input-group-prepend">
 			<span class="input-group-text" id="basic-addon1">Search</span>
 		  </div>
-		  <input type="text" name="q" class="form-control" placeholder="Search for a class or file" aria-label="Username" aria-describedby="basic-addon1" value="<?PHP echo $_GET["q"];?>">
+		  <input type="text" name="q" class="form-control" placeholder="Search for a file" aria-label="Username" aria-describedby="basic-addon1" value="<?PHP echo $_GET["q"];?>">
 		  <div class="input-group-append">
 			<button class="btn btn-outline-secondary" id="button-addon2">Go</button>
 		  </div>
