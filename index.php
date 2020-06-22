@@ -1,7 +1,14 @@
 <?PHP
-$start_time = time();
+
+$debug = false;
+
 $log_check = 1;
+$start_time = time();
 include("login.php");
+if($debug){
+	echo "LOGIN: ".(time()-$start_time)."\n";
+}
+
 if($authok != 1){
 	echo '<meta http-equiv="refresh" content="0; url=./login.php?required">';
 }
@@ -9,8 +16,12 @@ if($authok != 1){
 if(!isset($_GET["q"])){
 	$_GET["q"] = "";
 }
+
 ini_set('mssql.charset', 'UTF-8');
 mysqli_query($mylink,"SET NAMES 'utf8'");
+if($debug){
+	echo "CHARSET SET: ".(time()-$start_time)."\n";
+}
 
 if(!isset($_SESSION["username"])){
 	die('<meta http-equiv="refresh" content="0; url=./login.php?required">');
@@ -36,14 +47,10 @@ if(isset($_GET["permerror"])){
 
 if(isset($_POST["name"])){
 			$base64 = "";
-			if(is_uploaded_file($_FILES["docfile"]["tmp_name"])){
-				$path = $_FILES['docfile']['name'];
-				$base64 = base64_encode(file_get_contents($_FILES["docfile"]["tmp_name"]));
-			}
+			
 			if($USER_PERM_LEVEL < 1){
 				echo '<meta http-equiv="refresh" content="0; url=./index.php?permerror">';
 			}else{
-				
 				if(mysqli_num_rows(mysqli_query($mylink, "SELECT * FROM tags WHERE name = '".mysqli_real_escape_string($mylink, $_POST["tagged"])."' OR id='".mysqli_real_escape_string($mylink, $_POST["tagged"])."'"))<1){
 					mysqli_query($mylink, "INSERT INTO `tags`(`name`) VALUES ('".mysqli_real_escape_string($mylink, $_POST["tagged"])."')");
 					
@@ -52,10 +59,45 @@ if(isset($_POST["name"])){
 					
 				}
 				
-				$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, $base64).'","'.mysqli_real_escape_string($mylink, $_FILES['docfile']['name']).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
+				if(isset($_POST["file_name"])){
+					
+					$info_arr = array();
+					$info_arr[$_POST["part"]] = $_POST["base64"];
+					
+					
+					
+					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+					if(mysqli_num_rows($qr)>0){
+						$row = mysqli_fetch_array($qr);
+						$arr = json_decode($row["file"],true);
+						$arr[$_POST["part"]] = $_POST["base64"];
+						$ret = json_encode($arr);
+						if(sizeof($arr) == $_POST["total"]){
+							ksort($arr);
+							$ret = implode("",$arr);
+						}
+						echo sizeof($arr);
+						mysqli_query($mylink, "UPDATE `data` SET file='".$ret."' WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+					}else{
+						$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, json_encode($info_arr)).'","'.mysqli_real_escape_string($mylink, $_POST["file_name"]).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
+						$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+						$row = mysqli_fetch_array($qr);
+						$arr = json_decode($row["file"],true);
+						if(sizeof($arr) == $_POST["total"]){
+							sort($arr);
+							$ret = implode("",$arr);
+							mysqli_query($mylink, "UPDATE `data` SET file='".mysqli_real_escape_string($mylink, $ret)."' WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+						}
+						echo sizeof($arr);
+						
+					}
+					
+				}else{
+					echo "1";
+				}
 				echo mysqli_error($mylink);
-				echo '<meta http-equiv="refresh" content="0; url=./index.php?added">';
 			}
+			return;
 		}
 ?>
 
@@ -102,6 +144,9 @@ if(isset($_POST["name"])){
 		<hr>
 		<div class="row">
 		<?PHP
+		if($debug){
+			echo "BEGIN UI: ".(time()-$start_time)."\n";
+		}
 		
 		if(isset($_GET["q"]) || isset($_GET["class"])){
 			if(!isset($_GET["page"])){
@@ -123,6 +168,9 @@ if(isset($_POST["name"])){
 				$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name LIKE '%".mysqli_real_escape_string($mylink, $_GET["q"])."%' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
 			}
 			
+			if($debug){
+				echo "PAGINATION: ".(time()-$start_time)."\n";
+			}
 			
 			for($i = 0; $i < mysqli_num_rows($qr); $i++){
 				$array = mysqli_fetch_array($qr);
@@ -172,6 +220,9 @@ if(isset($_POST["name"])){
 				
 			}
 		}
+		if($debug){
+			echo "DATA OUTPUT: ".(time()-$start_time)."\n";
+		}
 		
 		
 		echo '</div><br><center style="text-align: center; margin-top: 10px;"><nav aria-label="Page navigation example">
@@ -197,7 +248,7 @@ if(isset($_POST["name"])){
 				  <span aria-hidden="true">&times;</span>
 				</button>
 			  </div>
-			  <form method="post" enctype="multipart/form-data">
+			  <form method="post" id="upload_form" enctype="multipart/form-data">
 			  <div class="modal-body">
 				  <div class="form-group">
 					<label for="exampleInputEmail1">Document Name</label>
@@ -207,24 +258,32 @@ if(isset($_POST["name"])){
 				  <div class="form-group">
 					<label for="exampleFormControlSelect1">Document Tag</label>
 					<select name="tagged" class="form-control" id="classSelect">
-					  <option>General</option>
+					  <option value="0">General</option>
 					  <?PHP
 					  $qr = mysqli_query($mylink, "SELECT * FROM tags");
 					  for($i = 0; $i < mysqli_num_rows($qr); $i++){
 						  $class = mysqli_fetch_array($qr);
 						  echo "<option value='".$class["id"]."'>".$class["name"]."</option>";
 					  }
+					  
+					  if($debug){
+							echo "TAG MODAL: ".(time()-$start_time)."\n";
+						}
 					  ?>
 					  <option value="custom">Custom</option>
 					  
 					</select>
 					<script>
+					
 					document.getElementById("classSelect").addEventListener("change", function(){
 						var e = document.getElementById("classSelect");
 						var strUser = e.options[e.selectedIndex].value;
 						if(strUser == "custom"){
 							document.getElementById("classSelect").outerHTML = '<div class="form-group"><input type="text" name="tagged" class="form-control" id="exampleInputEmail1" required></div>';
 						}
+						
+						
+						
 					});
 						
 					  </script>
@@ -240,17 +299,99 @@ if(isset($_POST["name"])){
 				  </div>
 				  <div class="form-group">
 					<label for="exampleFormControlFile1">Upload Attachment</label>
-					<input type="file" name="docfile" class="form-control-file" id="exampleFormControlFile1">
+					<input type="file" name="docfile" id="docfile" class="form-control-file" id="exampleFormControlFile1">
 					<small id="fileHelp" class="form-text text-muted">Accepted files: All | Max Size: 100MB</small>
 				  </div>
 				  <div class="form-group form-check">
 					<input type="checkbox" class="form-check-input" id="exampleCheck1" required>
 					<label class="form-check-label" for="exampleCheck1">I hereby accept that the information I submit is valid and correct. I fully understand that failure to abide by these terms will result in my access to this website being revoked.</label>
 				  </div>
+				  <input type="hidden" name="part" id="i_part" value="0" />
+				  <input type="hidden" name="total" id="i_total" value="0" />
+				  <input type="hidden" name="file_name" id="file_name" value="0" />
+				  <input type="hidden" name="base64" id="base64" value="0" />
+				  
+				  <div class="progress">
+				    <div class="progress-bar" id="upload_progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+				  </div>
 			  </div>
 			  <div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-				<button class="btn btn-primary">Add Document</button>
+				<button type="button" id="submit_btn" onclick="makeBase()" class="btn btn-primary">Add Document</button>
+				<script>
+				
+				function makeBase(){
+					
+					 $('#submit_btn').prop('disabled', true);
+					
+					if(document.querySelector('#docfile').files.length>0){
+					
+					var file = document.querySelector('#docfile').files[0];
+					var reader = new FileReader();
+					   reader.readAsDataURL(file);
+					   reader.onload = function () {
+						 
+						 var parts = reader.result.split(",")[1].match(/.{1,1000000}/g);
+						 
+						 console.log(parts);
+						 
+						 $('#i_total').val(parts.length);
+						 
+						 let file = $("#docfile")[0].files[0]; 
+						 $('#file_name').val(file.name);
+						 
+						 
+						 i = 0;
+						 
+						 $('#base64').val(parts[i]);
+						 $('#i_part').val(i);
+						 
+						 var xhttp = new XMLHttpRequest(); 
+						 xhttp.onreadystatechange = function() {
+							  if (this.readyState == 4 && this.status == 200) {
+								  if(i<(parts.length-1)){
+								  
+									  $('#upload_progress').width(((parseInt(this.responseText.trim())/parts.length)*100).toString()+"%");
+									  $('#upload_progress').html(Math.round((parseInt(this.responseText.trim())/parts.length)*100).toString()+"%");
+									  
+									  
+									i++;
+									   $('#base64').val(parts[i]);
+									   $('#i_part').val(i);
+									  xhttp.open("POST", "./", true);
+									  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+									  xhttp.send($('#upload_form').serialize()); 
+								  }else{
+									  $('#upload_progress').width(((parseInt(this.responseText.trim())/parts.length)*100).toString()+"%");
+									  $('#upload_progress').html("Done");
+								  }
+								  
+								  
+							  }
+							};
+						  xhttp.open("POST", "./", true);
+						  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+						  xhttp.send($('#upload_form').serialize()); 
+						
+						
+						 
+					   };
+					   reader.onerror = function (error) {
+						 console.log('Error: ', error);
+					   };
+					}else{
+						var xhttp = new XMLHttpRequest(); 
+						xhttp.open("POST", "./", true);
+						  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+						  xhttp.send($('#upload_form').serialize()); 
+						  $('#upload_progress').width("100%");
+						  $('#upload_progress').html("Done");
+					}
+				}
+				
+				
+				
+				</script>
 			  </div>
 			  </form>
 			</div>
@@ -298,7 +439,7 @@ echo time()-$start_time;
 ?>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
   </body>
