@@ -37,10 +37,6 @@ if(isset($_POST["name"])){
 			$base64 = "";
 			if(is_uploaded_file($_FILES["docfile"]["tmp_name"])){
 				$path = $_FILES['docfile']['name'];
-				$ext = pathinfo($path, PATHINFO_EXTENSION);
-				if($ext != "pdf"){
-					echo '<meta http-equiv="refresh" content="0; url=./index.php?error">';
-				}
 				$base64 = base64_encode(file_get_contents($_FILES["docfile"]["tmp_name"]));
 			}
 			if($USER_PERM_LEVEL < 1){
@@ -216,7 +212,7 @@ if(isset($_POST["name"])){
 				  <div class="form-group">
 					<label for="exampleFormControlFile1">Upload Attachment</label>
 					<input type="file" name="docfile" class="form-control-file" id="exampleFormControlFile1">
-					<small id="fileHelp" class="form-text text-muted">Accepted files: PDF | Max Size: 100MB</small>
+					<small id="fileHelp" class="form-text text-muted">Accepted files: All | Max Size: 100MB</small>
 				  </div>
 				  <div class="form-group form-check">
 					<input type="checkbox" class="form-check-input" id="exampleCheck1" required>
