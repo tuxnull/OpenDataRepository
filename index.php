@@ -42,7 +42,16 @@ if(isset($_POST["name"])){
 			if($USER_PERM_LEVEL < 1){
 				echo '<meta http-equiv="refresh" content="0; url=./index.php?permerror">';
 			}else{
-				$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, $base64).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
+				
+				if(mysqli_num_rows(mysqli_query($mylink, "SELECT * FROM tags WHERE name = '".mysqli_real_escape_string($mylink, $_POST["tagged"])."' OR id='".mysqli_real_escape_string($mylink, $_POST["tagged"])."'"))<1){
+					mysqli_query($mylink, "INSERT INTO `tags`(`name`) VALUES ('".mysqli_real_escape_string($mylink, $_POST["tagged"])."')");
+					
+					$row = mysqli_fetch_array(mysqli_query($mylink, "SELECT * FROM tags WHERE name = '".mysqli_real_escape_string($mylink, $_POST["tagged"])."' OR id='".mysqli_real_escape_string($mylink, $_POST["tagged"])."'"));
+					$_POST["tagged"] = $row["id"];
+					
+				}
+				
+				$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, $base64).'","'.mysqli_real_escape_string($mylink, $_FILES['docfile']['name']).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
 				echo mysqli_error($mylink);
 				echo '<meta http-equiv="refresh" content="0; url=./index.php?added">';
 			}
@@ -127,6 +136,9 @@ if(isset($_POST["name"])){
 					}
 				}else{
 					echo '<p class="card-text">'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span>';
+					if(mb_strlen($array["file"])>100000){
+						echo '<a download="'.$array["file_name"].'" href="./get_file.php?id='.$array["id"].'&download" class="btn btn-primary">Download</a> ';
+					}
 				}
 				
 				if($array["file"] != ""){
