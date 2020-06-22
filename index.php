@@ -55,7 +55,7 @@ if(isset($_POST["name"])){
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 
     <title><?PHP echo HOME_TITLE?></title>
   </head>
@@ -188,8 +188,8 @@ if(isset($_POST["name"])){
 					<small id="emailHelp" class="form-text text-muted">Please keep it as short as possible</small>
 				  </div>
 				  <div class="form-group">
-					<label for="exampleFormControlSelect1">Tag a Class</label>
-					<select name="tagged" class="form-control" id="exampleFormControlSelect1">
+					<label for="exampleFormControlSelect1">Document Tag</label>
+					<select name="tagged" class="form-control" id="classSelect">
 					  <option>General</option>
 					  <?PHP
 					  $qr = mysqli_query($mylink, "SELECT * FROM tags");
@@ -198,7 +198,19 @@ if(isset($_POST["name"])){
 						  echo "<option value='".$class["id"]."'>".$class["name"]."</option>";
 					  }
 					  ?>
+					  <option value="custom">Custom</option>
+					  
 					</select>
+					<script>
+					document.getElementById("classSelect").addEventListener("change", function(){
+						var e = document.getElementById("classSelect");
+						var strUser = e.options[e.selectedIndex].value;
+						if(strUser == "custom"){
+							document.getElementById("classSelect").outerHTML = '<div class="form-group"><input type="text" name="tagged" class="form-control" id="exampleInputEmail1" required></div>';
+						}
+					});
+						
+					  </script>
 				  </div>
 				  <div class="form-group">
 					<label for="exampleInputEmail1">URL</label>
