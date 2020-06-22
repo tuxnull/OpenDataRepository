@@ -1,9 +1,9 @@
 <?PHP
 session_start();
-define("MYSQL_HOST", "192.168.0.12");
-define("MYSQL_DATABASE", "alphagi_cloud");
-define("MYSQL_USER", "alphagi");
-define("MYSQL_PASSWORD", "Q2583EF");
+define("MYSQL_HOST", "");
+define("MYSQL_DATABASE", "");
+define("MYSQL_USER", "");
+define("MYSQL_PASSWORD", "");
 
 define("HOME_TITLE", "OpenDataRepository");
 
