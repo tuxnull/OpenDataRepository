@@ -138,28 +138,30 @@ if(isset($_POST["name"])){
 					echo '<p class="card-text">'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span>';
 					if(mb_strlen($array["file"])>100000){
 						echo '<a download="'.$array["file_name"].'" href="./get_file.php?id='.$array["id"].'&download" class="btn btn-primary">Download</a> ';
+					}else{
+						if($array["file"] != ""){
+						echo '<button type="button" class="btn btn-secondary" data-toggle="modal" data-target=".bd-example-modal-xl-'.$array["id"].'">View Attachment</button>';
+						echo '<div class="modal fade bd-example-modal-xl-'.$array["id"].'" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel" aria-hidden="true">
+								  <div class="modal-dialog modal-xl" role="document">
+									<div class="modal-content">
+									  <div class="modal-header">
+										<h5 class="modal-title" id="exampleModalLabel">Attachment</h5>
+										<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+										  <span aria-hidden="true">&times;</span>
+										</button>
+									  </div>
+									  <iframe src="./get_file.php?id='.$array["id"].'" height="100%" frameBorder="0" width="100%" style="height: 80vh;"></iframe>
+									  <div class="modal-footer">
+										<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+									  </div>
+									</div>
+								  </div>
+								</div>';
+						}
 					}
 				}
 				
-				if($array["file"] != ""){
-					echo '<button type="button" class="btn btn-secondary" data-toggle="modal" data-target=".bd-example-modal-xl-'.$array["id"].'">View Attachment</button>';
-					echo '<div class="modal fade bd-example-modal-xl-'.$array["id"].'" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel" aria-hidden="true">
-							  <div class="modal-dialog modal-xl" role="document">
-								<div class="modal-content">
-								  <div class="modal-header">
-									<h5 class="modal-title" id="exampleModalLabel">Attachment</h5>
-									<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-									  <span aria-hidden="true">&times;</span>
-									</button>
-								  </div>
-								  <iframe src="./get_file.php?id='.$array["id"].'" height="100%" frameBorder="0" width="100%" style="height: 80vh;"></iframe>
-								  <div class="modal-footer">
-									<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-								  </div>
-								</div>
-							  </div>
-							</div>';
-				}
+				
 				echo ' 
 						
 					  </div>
