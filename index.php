@@ -1,4 +1,5 @@
 <?PHP
+$start_time = time();
 $log_check = 1;
 include("login.php");
 if($authok != 1){
@@ -57,6 +58,8 @@ if(isset($_POST["name"])){
 			}
 		}
 ?>
+
+
 <html lang="en">
   <head>
     <!-- Required meta tags -->
@@ -109,14 +112,14 @@ if(isset($_POST["name"])){
 			
 			if(isset($_GET["class"])){
 				if($_GET["class"] == "*"){
-					$pages = round(mysqli_num_rows(mysqli_query($mylink, "SELECT id FROM data"))/9);
+					$pages = floor(mysqli_fetch_array(mysqli_query($mylink, "SELECT Count(*) FROM data"))[0]/9);
 					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name LIKE '%".mysqli_real_escape_string($mylink, $_GET["q"])."%' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
 				}else{
-					$pages = round(mysqli_num_rows(mysqli_query($mylink, "SELECT id FROM data WHERE tagged = '".mysqli_real_escape_string($mylink, $_GET["class"])."'"))/9);
+					$pages = floor(mysqli_fetch_array(mysqli_query($mylink, "SELECT Count(*) FROM data WHERE tagged = '".mysqli_real_escape_string($mylink, $_GET["class"])."'"))[0]/9);
 					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE tagged = '".mysqli_real_escape_string($mylink, $_GET["class"])."' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
 				}
 			}else{
-				$pages = round(mysqli_num_rows(mysqli_query($mylink, "SELECT id FROM data"))/9);
+				$pages = floor(mysqli_fetch_array(mysqli_query($mylink, "SELECT Count(*) FROM data"))[0]/9);
 				$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name LIKE '%".mysqli_real_escape_string($mylink, $_GET["q"])."%' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
 			}
 			
@@ -290,7 +293,9 @@ body {
   padding: 0 15px;
 }
 </style>
-
+<?PHP
+echo time()-$start_time;
+?>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
@@ -298,3 +303,4 @@ body {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
   </body>
 </html>
+
