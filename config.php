@@ -1,9 +1,9 @@
 <?PHP
 session_start();
-define("MYSQL_HOST", "");
-define("MYSQL_DATABASE", "");
-define("MYSQL_USER", "");
-define("MYSQL_PASSWORD", "");
+define("MYSQL_HOST", "HOSTNAME");
+define("MYSQL_DATABASE", "DATABASE");
+define("MYSQL_USER", "USERNAME");
+define("MYSQL_PASSWORD", "PASSWORD");
 
 define("HOME_TITLE", "OpenDataRepository");
 
