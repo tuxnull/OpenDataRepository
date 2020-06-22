@@ -64,32 +64,30 @@ if(isset($_POST["name"])){
 					$info_arr = array();
 					$info_arr[$_POST["part"]] = $_POST["base64"];
 					
-					
-					
 					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
 					if(mysqli_num_rows($qr)>0){
 						$row = mysqli_fetch_array($qr);
-						$arr = json_decode($row["file"],true);
+						
+						$arr = json_decode(file_get_contents("./".$row["id"].".temp"),true);
 						$arr[$_POST["part"]] = $_POST["base64"];
 						$ret = json_encode($arr);
+						echo sizeof($arr);
 						if(sizeof($arr) == $_POST["total"]){
 							ksort($arr);
 							$ret = implode("",$arr);
+							mysqli_query($mylink, "UPDATE `data` SET file='".$ret."' WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+							unlink("./".$row["id"].".temp");
+						}else{
+							file_put_contents("./".$row["id"].".temp",$ret);
 						}
-						echo sizeof($arr);
-						mysqli_query($mylink, "UPDATE `data` SET file='".$ret."' WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
 					}else{
 						$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, json_encode($info_arr)).'","'.mysqli_real_escape_string($mylink, $_POST["file_name"]).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
 						$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
-						$row = mysqli_fetch_array($qr);
-						$arr = json_decode($row["file"],true);
-						if(sizeof($arr) == $_POST["total"]){
-							sort($arr);
-							$ret = implode("",$arr);
-							mysqli_query($mylink, "UPDATE `data` SET file='".mysqli_real_escape_string($mylink, $ret)."' WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
-						}
-						echo sizeof($arr);
 						
+						$row = mysqli_fetch_array($qr);
+						
+						file_put_contents("./".$row["id"].".temp",json_encode($info_arr));
+						echo "1";
 					}
 					
 				}else{
@@ -331,7 +329,7 @@ if(isset($_POST["name"])){
 					   reader.readAsDataURL(file);
 					   reader.onload = function () {
 						 
-						 var parts = reader.result.split(",")[1].match(/.{1,1000000}/g);
+						 var parts = reader.result.split(",")[1].match(/.{1,500000}/g);
 						 
 						 console.log(parts);
 						 
