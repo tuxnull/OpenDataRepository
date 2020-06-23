@@ -225,7 +225,7 @@ if(isset($_POST["name"])){
 										  <span aria-hidden="true">&times;</span>
 										</button>
 									  </div>
-									  <iframe src="./get_file.php?id='.$array["id"].'" height="100%" frameBorder="0" width="100%" style="height: 80vh;"></iframe>
+									  <iframe src="https://example.org/" onload="if(this.src.trim() == \'https://example.org/\'){this.src = \'./get_file.php?id='.$array["id"].'\';}" height="100%" frameBorder="0" width="100%" style="height: 80vh;"></iframe>
 									  <div class="modal-footer">
 										<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 									  </div>
