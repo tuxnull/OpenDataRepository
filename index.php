@@ -92,7 +92,7 @@ if(isset($_POST["name"])){
 							file_put_contents("./".$row["id"].".temp",$_POST["base64"],FILE_APPEND);
 						}
 					}else{
-						$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, "").'","'.mysqli_real_escape_string($mylink, $_POST["file_name"]).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
+						$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, htmlentities($_POST["name"])).'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["url"])).'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["description"])).'","'.mysqli_real_escape_string($mylink, "").'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"])).'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["tagged"])).'" )');
 						$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
 						
 						$row = mysqli_fetch_array($qr);
