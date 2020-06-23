@@ -1,5 +1,9 @@
 <?PHP
 include("config.php");
+include("login.php");
+if($authok != 1){
+	die('<meta http-equiv="refresh" content="0; url=./login.php?required">');
+}
 
 if(isset($_GET["id"])){
 	$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT id,name,link,description,LEFT(file, 1000000) AS tfile,file_name,tagged FROM data WHERE id = '".$_GET["id"]."'"));
@@ -25,12 +29,10 @@ if(isset($_GET["id"])){
 		$mime_type = finfo_buffer($f, base64_decode($array["tfile"]), FILEINFO_MIME_TYPE);
 		header('Content-Type: '.$mime_type);
 		
-		$length = mysqli_fetch_array(mysqli_query($mylink, "SELECT LENGTH(file) AS strlen FROM data WHERE id = '".$_GET["id"]."'"))["strlen"];
-		
 		$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT SUBSTR(file, 1, 100) FROM data WHERE id = '".$_GET["id"]."'"));
 		$i = 0;
 		while($array[0] != ""){
-			$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT SUBSTR(file, ".(($i*50000)+1).", 50000) AS tfile FROM data WHERE id = '".$_GET["id"]."'"));
+			$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT SUBSTR(file, ".(($i*5000000)+1).", 5000000) AS tfile FROM data WHERE id = '".$_GET["id"]."'"));
 			echo base64_decode($array["tfile"]);
 			$i++;
 		}
