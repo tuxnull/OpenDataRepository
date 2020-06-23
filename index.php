@@ -45,6 +45,17 @@ if(isset($_GET["permerror"])){
 			</div>';
 }
 
+if(isset($_GET["delete"])){
+	if($USER_PERM_LEVEL < 2){
+		echo '<meta http-equiv="refresh" content="0; url=./index.php?permerror">';
+	}else{
+		mysqli_query($mylink, "DELETE FROM data WHERE id='".mysqli_real_escape_string($mylink, $_GET["delete"])."'");
+		echo '<div class="alert alert-success" role="alert">
+			<b>Success</b> Data was deleted.
+			</div>';
+	}
+}
+
 if(isset($_POST["name"])){
 			$base64 = "";
 			
@@ -60,33 +71,48 @@ if(isset($_POST["name"])){
 				}
 				
 				if(isset($_POST["file_name"])){
-					
-					$info_arr = array();
-					$info_arr[$_POST["part"]] = $_POST["base64"];
-					
 					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
 					if(mysqli_num_rows($qr)>0){
 						$row = mysqli_fetch_array($qr);
-						
-						$arr = json_decode(file_get_contents("./".$row["id"].".temp"),true);
-						$arr[$_POST["part"]] = $_POST["base64"];
-						$ret = json_encode($arr);
-						echo sizeof($arr);
-						if(sizeof($arr) == $_POST["total"]){
-							ksort($arr);
-							$ret = implode("",$arr);
-							mysqli_query($mylink, "UPDATE `data` SET file='".$ret."' WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+						echo $_POST["part"]+1;
+						if($_POST["part"]+1 == $_POST["total"]){
+							file_put_contents("./".$row["id"].".temp",$_POST["base64"],FILE_APPEND);
+							$handle = fopen("./".$row["id"].".temp", 'r');
+							
+							while(!feof($handle)){
+								$builder = fread($handle, 524288);
+								mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".$builder."') WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+								
+							}
+							
+							fclose($handle);
+							
 							unlink("./".$row["id"].".temp");
 						}else{
-							file_put_contents("./".$row["id"].".temp",$ret);
+							file_put_contents("./".$row["id"].".temp",$_POST["base64"],FILE_APPEND);
 						}
 					}else{
-						$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, json_encode($info_arr)).'","'.mysqli_real_escape_string($mylink, $_POST["file_name"]).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
+						$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, $_POST["name"]).'","'.mysqli_real_escape_string($mylink, $_POST["url"]).'","'.mysqli_real_escape_string($mylink, $_POST["description"]).'","'.mysqli_real_escape_string($mylink, "").'","'.mysqli_real_escape_string($mylink, $_POST["file_name"]).'","'.mysqli_real_escape_string($mylink, $_POST["tagged"]).'" )');
 						$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
 						
 						$row = mysqli_fetch_array($qr);
 						
-						file_put_contents("./".$row["id"].".temp",json_encode($info_arr));
+						file_put_contents("./".$row["id"].".temp",$_POST["base64"]);
+						
+						if($_POST["part"]+1 == $_POST["total"]){
+							$handle = fopen("./".$row["id"].".temp", 'r');
+							
+							while(!feof($handle)){
+								$builder = fread($handle, 524288);
+								mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".$builder."') WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+								
+							}
+							
+							fclose($handle);
+							
+							unlink("./".$row["id"].".temp");
+						}
+						
 						echo "1";
 					}
 					
@@ -156,14 +182,14 @@ if(isset($_POST["name"])){
 			if(isset($_GET["class"])){
 				if($_GET["class"] == "*"){
 					$pages = floor(mysqli_fetch_array(mysqli_query($mylink, "SELECT Count(*) FROM data"))[0]/9);
-					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name LIKE '%".mysqli_real_escape_string($mylink, $_GET["q"])."%' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
+					$qr = mysqli_query($mylink, "SELECT id,name,link,description,LEFT(file, 1000000) AS tfile,file_name,tagged FROM data WHERE name LIKE '%".mysqli_real_escape_string($mylink, $_GET["q"])."%' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
 				}else{
 					$pages = floor(mysqli_fetch_array(mysqli_query($mylink, "SELECT Count(*) FROM data WHERE tagged = '".mysqli_real_escape_string($mylink, $_GET["class"])."'"))[0]/9);
-					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE tagged = '".mysqli_real_escape_string($mylink, $_GET["class"])."' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
+					$qr = mysqli_query($mylink, "SELECT id,name,link,description,LEFT(file, 1000000) AS tfile,file_name,tagged FROM data WHERE tagged = '".mysqli_real_escape_string($mylink, $_GET["class"])."' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
 				}
 			}else{
 				$pages = floor(mysqli_fetch_array(mysqli_query($mylink, "SELECT Count(*) FROM data"))[0]/9);
-				$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name LIKE '%".mysqli_real_escape_string($mylink, $_GET["q"])."%' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
+				$qr = mysqli_query($mylink, "SELECT id,name,link,description,LEFT(file, 1000000) AS tfile,file_name,tagged FROM data WHERE name LIKE '%".mysqli_real_escape_string($mylink, $_GET["q"])."%' ORDER BY id DESC LIMIT 9 OFFSET ".($_GET["page"]*9));
 			}
 			
 			if($debug){
@@ -179,16 +205,16 @@ if(isset($_POST["name"])){
 				$tagged_a = mysqli_fetch_array($qrr);
 				if($array["link"] != ""){
 					if (strpos($array["link"], 'chat.whatsapp') !== false) {
-						echo '<p class="card-text">WhatsApp Group<br>'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span><a href="'.$array["link"].'" class="btn btn-primary">Join Group</a>';
+						echo '<p class="card-text">WhatsApp Group<br>'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span><br><a href="'.$array["link"].'" class="btn btn-primary">Join Group</a>';
 					}else{
-						echo '<p class="card-text">'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span><a href="'.$array["link"].'" class="btn btn-primary">Open Document</a> ';
+						echo '<p class="card-text">'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span><br><a href="'.$array["link"].'" class="btn btn-primary">Open Document</a> ';
 					}
 				}else{
-					echo '<p class="card-text">'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span>';
-					if(mb_strlen($array["file"])>100000){
+					echo '<p class="card-text">'.$array["description"].'</p><span class="badge badge-info">'.$tagged_a["name"].'</span> <span class="badge badge-secondary">'.explode(".",$array["file_name"])[sizeof(explode(".",$array["file_name"]))-1].'</span><br>';
+					if(mb_strlen($array["tfile"])>100000 && strpos($array["file_name"], '.pdf') == false){
 						echo '<a download="'.$array["file_name"].'" href="./get_file.php?id='.$array["id"].'&download" class="btn btn-primary">Download</a> ';
 					}else{
-						if($array["file"] != ""){
+						if($array["tfile"] != ""){
 						echo '<button type="button" class="btn btn-secondary" data-toggle="modal" data-target=".bd-example-modal-xl-'.$array["id"].'">View Attachment</button>';
 						echo '<div class="modal fade bd-example-modal-xl-'.$array["id"].'" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel" aria-hidden="true">
 								  <div class="modal-dialog modal-xl" role="document">
@@ -210,6 +236,9 @@ if(isset($_POST["name"])){
 					}
 				}
 				
+				if($USER_PERM_LEVEL >=2){
+					echo '<br><a href="./?delete='.$array["id"].'"<span class="badge badge-danger">Delete</span></a>';
+				}
 				
 				echo ' 
 						
@@ -341,6 +370,8 @@ if(isset($_POST["name"])){
 						 
 						 i = 0;
 						 
+						 last_finished_upload = Math.round((new Date()).getTime() / 1000);
+						 
 						 $('#base64').val(parts[i]);
 						 $('#i_part').val(i);
 						 
@@ -352,6 +383,9 @@ if(isset($_POST["name"])){
 									  $('#upload_progress').width(((parseInt(this.responseText.trim())/parts.length)*100).toString()+"%");
 									  $('#upload_progress').html(Math.round((parseInt(this.responseText.trim())/parts.length)*100).toString()+"%");
 									  
+									  
+									  console.log(500000/(Math.round((new Date()).getTime() / 1000)-last_finished_upload));
+									  last_finished_upload = Math.round((new Date()).getTime() / 1000);
 									  
 									i++;
 									   $('#base64').val(parts[i]);
