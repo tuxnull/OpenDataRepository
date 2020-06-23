@@ -77,34 +77,36 @@ if(isset($_POST["name"])){
 						echo $_POST["part"]+1;
 						if($_POST["part"]+1 == $_POST["total"]){
 							file_put_contents("./".$row["id"].".temp",$_POST["base64"],FILE_APPEND);
-							$handle = fopen("./".$row["id"].".temp", 'r');
-							
-							while(!feof($handle)){
-								$builder = fread($handle, 1048576);
-								mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".$builder."') WHERE name='".mysqli_real_escape_string($mylink, htmlentities($_POST["name"]))."' AND file_name LIKE '".mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"]))."'");
+							$handle = fopen("./".$row["id"].".temp", "r");
+							if ($handle) {
+								$builder = "";
+								$i = 0;
+								while(!feof($handle)){
+									$temp = fread($handle, 6969696);
+									mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".mysqli_real_escape_string($mylink,$temp)."') WHERE name='".mysqli_real_escape_string($mylink, htmlentities($_POST["name"]))."' AND file_name LIKE '".mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"]))."'");
+								}
+								fclose($handle);
+							} else {
 								
-							}
-							
-							fclose($handle);
-							
+							} 
 							unlink("./".$row["id"].".temp");
 						}else{
-							file_put_contents("./".$row["id"].".temp",$_POST["base64"],FILE_APPEND);
+							file_put_contents("./".$row["id"].".temp",$_POST["base64"]."\n",FILE_APPEND);
 						}
 					}else{
 						$qr = mysqli_query($mylink, 'INSERT INTO data (`name`, `link`, `description`, `file`,`file_name`, `tagged`) VALUES ("'.mysqli_real_escape_string($mylink, htmlentities($_POST["name"])).'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["url"])).'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["description"])).'","'.mysqli_real_escape_string($mylink, "").'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"])).'","'.mysqli_real_escape_string($mylink, htmlentities($_POST["tagged"])).'" )');
-						$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+						$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, htmlentities($_POST["name"]))."' AND file_name LIKE '".mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"]))."'");
 						
 						$row = mysqli_fetch_array($qr);
 						
-						file_put_contents("./".$row["id"].".temp",$_POST["base64"]);
+						file_put_contents("./".$row["id"].".temp",$_POST["base64"]."\n");
 						
 						if($_POST["part"]+1 == $_POST["total"]){
 							$handle = fopen("./".$row["id"].".temp", 'r');
 							
 							while(!feof($handle)){
 								$builder = fread($handle, 524288);
-								mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".$builder."') WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+								mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".$builder."') WHERE name='".mysqli_real_escape_string($mylink, htmlentities($_POST["name"]))."' AND file_name LIKE '".mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"]))."'");
 								
 							}
 							
@@ -358,7 +360,7 @@ if(isset($_POST["name"])){
 					   reader.readAsDataURL(file);
 					   reader.onload = function () {
 						 
-						 var parts = reader.result.split(",")[1].match(/.{1,500000}/g);
+						 var parts = reader.result.split(",")[1].match(/.{1,1000000}/g);
 						 
 						 console.log(parts);
 						 
@@ -393,7 +395,19 @@ if(isset($_POST["name"])){
 									  xhttp.open("POST", "./", true);
 									  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 									  xhttp.send($('#upload_form').serialize()); 
+									  
+									  if(i+1 == parts.length){
+										  $('#upload_progress').addClass("bg-info");
+										  $('#upload_progress').addClass("progress-bar-striped");
+										  $('#upload_progress').addClass("progress-bar-animated");
+										  $('#upload_progress').html("Processing...");
+										  
+										  
+									  }
+									  
 								  }else{
+										  $('#upload_progress').removeClass("progress-bar-striped");
+										  $('#upload_progress').removeClass("progress-bar-animated");
 									  $('#upload_progress').width(((parseInt(this.responseText.trim())/parts.length)*100).toString()+"%");
 									  $('#upload_progress').html("Done");
 								  }
@@ -430,6 +444,89 @@ if(isset($_POST["name"])){
 		  </div>
 		</div>
 	</div>
+	
+	<script>
+	function modifyDoc(id, name){
+		
+		
+		$('#mod_doc_name').val(name);
+		$('#modify_document').modal('toggle');
+	}
+	</script>
+	
+	<div class="modal fade bd-example-modal-lg" id="modify_document" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<h5 class="modal-title" id="exampleModalLabel">Modify Document</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				  <span aria-hidden="true">&times;</span>
+				</button>
+			  </div>
+			  <form method="post" id="upload_form" enctype="multipart/form-data">
+			  <div class="modal-body">
+				  <div class="form-group">
+					<label for="exampleInputEmail1">Document Name</label>
+					<input type="text" name="name" id="mod_doc_name" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required>
+					<small id="emailHelp" class="form-text text-muted">Please keep it as short as possible</small>
+				  </div>
+				  <div class="form-group">
+					<label for="exampleFormControlSelect1">Document Tag</label>
+					<select name="tagged" class="form-control" id="classSelect">
+					  <option value="">General</option>
+					  <?PHP
+					  $qr = mysqli_query($mylink, "SELECT * FROM tags");
+					  for($i = 0; $i < mysqli_num_rows($qr); $i++){
+						  $class = mysqli_fetch_array($qr);
+						  echo "<option value='".$class["id"]."'>".$class["name"]."</option>";
+					  }
+					  if($debug){
+							echo "TAG MODAL: ".(time()-$start_time)."\n";
+						}
+					  ?>
+					  <option value="custom">Custom</option>
+					</select>
+					<script>
+					document.getElementById("classSelect").addEventListener("change", function(){
+						var e = document.getElementById("classSelect");
+						var strUser = e.options[e.selectedIndex].value;
+						if(strUser == "custom"){
+							document.getElementById("classSelect").outerHTML = '<div class="form-group"><input type="text" name="tagged" class="form-control" id="exampleInputEmail1" required></div>';
+						}
+					});
+					  </script>
+				  </div>
+				  <div class="form-group">
+					<label for="exampleInputEmail1">URL</label>
+					<input type="text" name="url" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+					<small id="emailHelp" class="form-text text-muted">Before adding, please check if the link has already been added by using the search function on the website.</small>
+				  </div>
+				  <div class="form-group">
+					<label for="exampleFormControlTextarea1">Document Description</label>
+					<textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="3"></textarea>
+				  </div>
+				  <div class="form-group">
+					<label for="exampleFormControlFile1">Upload Attachment</label>
+					<input type="file" name="docfile" id="docfile" class="form-control-file" id="exampleFormControlFile1">
+					<small id="fileHelp" class="form-text text-muted">Accepted files: All | Max Size: 100MB</small>
+				  </div>
+				  <div class="form-group form-check">
+					<input type="checkbox" class="form-check-input" id="exampleCheck1" required>
+					<label class="form-check-label" for="exampleCheck1">I hereby accept that the information I submit is valid and correct. I fully understand that failure to abide by these terms will result in my access to this website being revoked.</label>
+				  </div>				  
+				  <div class="progress">
+				    <div class="progress-bar" id="upload_progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+				  </div>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button class="btn btn-primary">Modify Document</button>
+			  </div>
+			  </form>
+			</div>
+		  </div>
+		</div>
+	
 	<nav class="navbar navbar-light bg-light footer">
 		<span class="navbar-text">
 		Made by Patrick Garske (@tuxnull). <a href="https://github.com/tuxnull/OpenDataRepository">Fork this on GitHub</a>
