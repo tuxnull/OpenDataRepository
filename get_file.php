@@ -2,27 +2,39 @@
 include("config.php");
 
 if(isset($_GET["id"])){
-	$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT * FROM data WHERE id = '".$_GET["id"]."'"));
-	
-	
+	$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT id,name,link,description,LEFT(file, 1000000) AS tfile,file_name,tagged FROM data WHERE id = '".$_GET["id"]."'"));
 	
 	if(!isset($_GET["download"])){
 		
-		$f = finfo_open();
-
-		$mime_type = finfo_buffer($f, base64_decode($array["file"]), FILEINFO_MIME_TYPE);
+		if(strlen($array["tfile"])<3000000){
 		
-		if($mime_type == "application/pdf"){
-			echo '<iframe src="data:application/pdf;base64,'.$array["file"].'" height="100%" frameBorder="0" width="100%"></iframe>';
+			$f = finfo_open();
+
+			$mime_type = finfo_buffer($f, base64_decode($array["tfile"]), FILEINFO_MIME_TYPE);
+			
+			if($mime_type == "application/pdf"){
+				echo '<iframe src="data:application/pdf;base64,'.$array["tfile"].'" height="100%" frameBorder="0" width="100%"></iframe>';
+			}else{
+				echo '<h1>File can not be displayed.</h1><a href="./get_file.php?id='.$_GET["id"].'&download" download="'.$array["file_name"].'">Download File</a><br>';	
+			}
 		}else{
 			echo '<h1>File can not be displayed.</h1><a href="./get_file.php?id='.$_GET["id"].'&download" download="'.$array["file_name"].'">Download File</a><br>';	
 		}
 	}else{
 		$f = finfo_open();
-
-		$mime_type = finfo_buffer($f, base64_decode($array["file"]), FILEINFO_MIME_TYPE);
+		$mime_type = finfo_buffer($f, base64_decode($array["tfile"]), FILEINFO_MIME_TYPE);
 		header('Content-Type: '.$mime_type);
-		echo base64_decode($array["file"]);
+		
+		$length = mysqli_fetch_array(mysqli_query($mylink, "SELECT LENGTH(file) AS strlen FROM data WHERE id = '".$_GET["id"]."'"))["strlen"];
+		
+		$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT SUBSTR(file, 1, 100) FROM data WHERE id = '".$_GET["id"]."'"));
+		$i = 0;
+		while($array[0] != ""){
+			$array = mysqli_fetch_array(mysqli_query($mylink, "SELECT SUBSTR(file, ".(($i*50000)+1).", 50000) AS tfile FROM data WHERE id = '".$_GET["id"]."'"));
+			echo base64_decode($array["tfile"]);
+			$i++;
+		}
+		
 	}
 }
 
