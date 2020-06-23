@@ -10,7 +10,7 @@ if($debug){
 }
 
 if($authok != 1){
-	echo '<meta http-equiv="refresh" content="0; url=./login.php?required">';
+	die('<meta http-equiv="refresh" content="0; url=./login.php?required">');
 }
 
 if(!isset($_GET["q"])){
@@ -71,7 +71,7 @@ if(isset($_POST["name"])){
 				}
 				
 				if(isset($_POST["file_name"])){
-					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+					$qr = mysqli_query($mylink, "SELECT * FROM data WHERE name='".mysqli_real_escape_string($mylink, htmlentities($_POST["name"]))."' AND file_name LIKE '".mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"]))."'");
 					if(mysqli_num_rows($qr)>0){
 						$row = mysqli_fetch_array($qr);
 						echo $_POST["part"]+1;
@@ -80,8 +80,8 @@ if(isset($_POST["name"])){
 							$handle = fopen("./".$row["id"].".temp", 'r');
 							
 							while(!feof($handle)){
-								$builder = fread($handle, 524288);
-								mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".$builder."') WHERE name='".mysqli_real_escape_string($mylink, $_POST["name"])."' AND file_name LIKE '".mysqli_real_escape_string($mylink, $_POST["file_name"])."'");
+								$builder = fread($handle, 1048576);
+								mysqli_query($mylink, "UPDATE `data` SET file=CONCAT(file,'".$builder."') WHERE name='".mysqli_real_escape_string($mylink, htmlentities($_POST["name"]))."' AND file_name LIKE '".mysqli_real_escape_string($mylink, htmlentities($_POST["file_name"]))."'");
 								
 							}
 							
@@ -117,7 +117,7 @@ if(isset($_POST["name"])){
 					}
 					
 				}else{
-					echo "1";
+					echo "No Filename";
 				}
 				echo mysqli_error($mylink);
 			}
@@ -370,7 +370,7 @@ if(isset($_POST["name"])){
 						 
 						 i = 0;
 						 
-						 last_finished_upload = Math.round((new Date()).getTime() / 1000);
+						 last_finished_upload = Math.round((new Date()).getTime() / 1);
 						 
 						 $('#base64').val(parts[i]);
 						 $('#i_part').val(i);
@@ -384,10 +384,10 @@ if(isset($_POST["name"])){
 									  $('#upload_progress').html(Math.round((parseInt(this.responseText.trim())/parts.length)*100).toString()+"%");
 									  
 									  
-									  console.log(500000/(Math.round((new Date()).getTime() / 1000)-last_finished_upload));
-									  last_finished_upload = Math.round((new Date()).getTime() / 1000);
+									  console.log(500000/(Math.round((new Date()).getTime() / 1)-last_finished_upload));
+									  last_finished_upload = Math.round((new Date()).getTime() / 1);
 									  
-									i++;
+									  i++;
 									   $('#base64').val(parts[i]);
 									   $('#i_part').val(i);
 									  xhttp.open("POST", "./", true);
